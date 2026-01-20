@@ -199,21 +199,101 @@ async def update_resume(resume_id: str, resume_data: ResumeUpdate, current_user:
     
     return updated_resume
 
-@api_router.delete(\"/resumes/{resume_id}\")
-async def delete_resume(resume_id: str, current_user: dict = Depends(get_current_user)):\n    result = await db.resumes.delete_one({\"id\": resume_id, \"user_id\": current_user['id']})\n    \n    if result.deleted_count == 0:\n        raise HTTPException(status_code=404, detail=\"Resume not found\")\n    \n    return {\"message\": \"Resume deleted successfully\"}
+@api_router.delete("/resumes/{resume_id}")
+async def delete_resume(resume_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.resumes.delete_one({"id": resume_id, "user_id": current_user['id']})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    return {"message": "Resume deleted successfully"}
 
-@api_router.post(\"/resumes/{resume_id}/duplicate\", response_model=ResumeResponse)
-async def duplicate_resume(resume_id: str, current_user: dict = Depends(get_current_user)):\n    # Find original resume\n    original = await db.resumes.find_one({\"id\": resume_id, \"user_id\": current_user['id']}, {\"_id\": 0})\n    \n    if not original:\n        raise HTTPException(status_code=404, detail=\"Resume not found\")\n    \n    # Create duplicate\n    new_id = str(uuid.uuid4())\n    duplicate = {**original}\n    duplicate['id'] = new_id\n    duplicate['title'] = f\"{original['title']} (Copy)\"\n    duplicate['created_at'] = datetime.now(timezone.utc).isoformat()\n    duplicate['updated_at'] = datetime.now(timezone.utc).isoformat()\n    \n    await db.resumes.insert_one(duplicate)\n    \n    duplicate['created_at'] = datetime.fromisoformat(duplicate['created_at'])\n    duplicate['updated_at'] = datetime.fromisoformat(duplicate['updated_at'])\n    \n    return duplicate
+@api_router.post("/resumes/{resume_id}/duplicate", response_model=ResumeResponse)
+async def duplicate_resume(resume_id: str, current_user: dict = Depends(get_current_user)):
+    # Find original resume
+    original = await db.resumes.find_one({"id": resume_id, "user_id": current_user['id']}, {"_id": 0})
+    
+    if not original:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    # Create duplicate
+    new_id = str(uuid.uuid4())
+    duplicate = {**original}
+    duplicate['id'] = new_id
+    duplicate['title'] = f"{original['title']} (Copy)"
+    duplicate['created_at'] = datetime.now(timezone.utc).isoformat()
+    duplicate['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.resumes.insert_one(duplicate)
+    
+    duplicate['created_at'] = datetime.fromisoformat(duplicate['created_at'])
+    duplicate['updated_at'] = datetime.fromisoformat(duplicate['updated_at'])
+    
+    return duplicate
 
-@api_router.get(\"/resumes/{resume_id}/ats-score\", response_model=ATSScoreResponse)
-async def get_ats_score(resume_id: str, current_user: dict = Depends(get_current_user)):\n    resume = await db.resumes.find_one({\"id\": resume_id, \"user_id\": current_user['id']}, {\"_id\": 0})\n    \n    if not resume:\n        raise HTTPException(status_code=404, detail=\"Resume not found\")\n    \n    ats_result = calculate_ats_score(resume)\n    \n    return ATSScoreResponse(\n        score=ats_result['score'],\n        suggestions=ats_result['suggestions'],\n        missing_keywords=ats_result['missing_keywords']\n    )
+@api_router.get("/resumes/{resume_id}/ats-score", response_model=ATSScoreResponse)
+async def get_ats_score(resume_id: str, current_user: dict = Depends(get_current_user)):
+    resume = await db.resumes.find_one({"id": resume_id, "user_id": current_user['id']}, {"_id": 0})
+    
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    ats_result = calculate_ats_score(resume)
+    
+    return ATSScoreResponse(
+        score=ats_result['score'],
+        suggestions=ats_result['suggestions'],
+        missing_keywords=ats_result['missing_keywords']
+    )
 
-@api_router.get(\"/resumes/{resume_id}/export/pdf\")
-async def export_pdf(resume_id: str, current_user: dict = Depends(get_current_user)):\n    resume = await db.resumes.find_one({\"id\": resume_id, \"user_id\": current_user['id']}, {\"_id\": 0})\n    \n    if not resume:\n        raise HTTPException(status_code=404, detail=\"Resume not found\")\n    \n    # Generate PDF\n    pdf_buffer = generate_pdf(resume, resume.get('template_id', 'ats-tech'))\n    \n    return StreamingResponse(\n        pdf_buffer,\n        media_type=\"application/pdf\",\n        headers={\n            \"Content-Disposition\": f\"attachment; filename={resume['title'].replace(' ', '_')}.pdf\"\n        }\n    )
+@api_router.get("/resumes/{resume_id}/export/pdf")
+async def export_pdf(resume_id: str, current_user: dict = Depends(get_current_user)):
+    resume = await db.resumes.find_one({"id": resume_id, "user_id": current_user['id']}, {"_id": 0})
+    
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    # Generate PDF
+    pdf_buffer = generate_pdf(resume, resume.get('template_id', 'ats-tech'))
+    
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename={resume['title'].replace(' ', '_')}.pdf"
+        }
+    )
 
 # Template Routes
-@api_router.get(\"/templates\")
-async def get_templates():\n    templates = [\n        {\n            \"id\": \"ats-tech\",\n            \"name\": \"ATS-Friendly Tech\",\n            \"description\": \"Clean, professional format optimized for Applicant Tracking Systems. Perfect for tech roles.\",\n            \"industry\": \"tech\",\n            \"experience_level\": \"all\",\n            \"preview_image\": \"https://images.pexels.com/photos/7793999/pexels-photo-7793999.jpeg?auto=compress&cs=tinysrgb&w=400\"\n        },\n        {\n            \"id\": \"business-pro\",\n            \"name\": \"Business Professional\",\n            \"description\": \"Traditional format with a modern touch. Ideal for business and management roles.\",\n            \"industry\": \"business\",\n            \"experience_level\": \"mid-senior\",\n            \"preview_image\": \"https://images.pexels.com/photos/8528405/pexels-photo-8528405.jpeg?auto=compress&cs=tinysrgb&w=400\"\n        },\n        {\n            \"id\": \"creative-bold\",\n            \"name\": \"Creative Bold\",\n            \"description\": \"Eye-catching design for creative professionals. Stand out while staying ATS-friendly.\",\n            \"industry\": \"creative\",\n            \"experience_level\": \"all\",\n            \"preview_image\": \"https://images.pexels.com/photos/5668858/pexels-photo-5668858.jpeg?auto=compress&cs=tinysrgb&w=400\"\n        }\n    ]\n    return templates
+@api_router.get("/templates")
+async def get_templates():
+    templates = [
+        {
+            "id": "ats-tech",
+            "name": "ATS-Friendly Tech",
+            "description": "Clean, professional format optimized for Applicant Tracking Systems. Perfect for tech roles.",
+            "industry": "tech",
+            "experience_level": "all",
+            "preview_image": "https://images.pexels.com/photos/7793999/pexels-photo-7793999.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+            "id": "business-pro",
+            "name": "Business Professional",
+            "description": "Traditional format with a modern touch. Ideal for business and management roles.",
+            "industry": "business",
+            "experience_level": "mid-senior",
+            "preview_image": "https://images.pexels.com/photos/8528405/pexels-photo-8528405.jpeg?auto=compress&cs=tinysrgb&w=400"
+        },
+        {
+            "id": "creative-bold",
+            "name": "Creative Bold",
+            "description": "Eye-catching design for creative professionals. Stand out while staying ATS-friendly.",
+            "industry": "creative",
+            "experience_level": "all",
+            "preview_image": "https://images.pexels.com/photos/5668858/pexels-photo-5668858.jpeg?auto=compress&cs=tinysrgb&w=400"
+        }
+    ]
+    return templates
 
 # Include the router in the main app
 app.include_router(api_router)
