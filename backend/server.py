@@ -54,8 +54,36 @@ async def get_current_user(authorization: Optional[str] = Header(None)) -> dict:
     return user
 
 # Auth Routes
-@api_router.post(\"/auth/signup\", response_model=LoginResponse)
-async def signup(user_data: UserCreate):\n    # Check if user exists\n    existing_user = await db.users.find_one({\"email\": user_data.email}, {\"_id\": 0})\n    if existing_user:\n        raise HTTPException(status_code=400, detail=\"Email already registered\")\n    \n    # Create user\n    user_id = str(uuid.uuid4())\n    user_doc = {\n        \"id\": user_id,\n        \"email\": user_data.email,\n        \"password_hash\": hash_password(user_data.password),\n        \"full_name\": user_data.full_name,\n        \"created_at\": datetime.now(timezone.utc).isoformat()\n    }\n    \n    await db.users.insert_one(user_doc)\n    \n    # Generate token\n    token = create_access_token({\"sub\": user_id})\n    \n    user_response = UserResponse(\n        id=user_id,\n        email=user_data.email,\n        full_name=user_data.full_name,\n        created_at=datetime.now(timezone.utc)\n    )\n    \n    return LoginResponse(token=token, user=user_response)
+@api_router.post("/auth/signup", response_model=LoginResponse)
+async def signup(user_data: UserCreate):
+    # Check if user exists
+    existing_user = await db.users.find_one({"email": user_data.email}, {"_id": 0})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create user
+    user_id = str(uuid.uuid4())
+    user_doc = {
+        "id": user_id,
+        "email": user_data.email,
+        "password_hash": hash_password(user_data.password),
+        "full_name": user_data.full_name,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Generate token
+    token = create_access_token({"sub": user_id})
+    
+    user_response = UserResponse(
+        id=user_id,
+        email=user_data.email,
+        full_name=user_data.full_name,
+        created_at=datetime.now(timezone.utc)
+    )
+    
+    return LoginResponse(token=token, user=user_response)
 
 @api_router.post(\"/auth/login\", response_model=LoginResponse)
 async def login(login_data: LoginRequest):\n    # Find user\n    user = await db.users.find_one({\"email\": login_data.email}, {\"_id\": 0})\n    if not user:\n        raise HTTPException(status_code=401, detail=\"Invalid email or password\")\n    \n    # Verify password\n    if not verify_password(login_data.password, user['password_hash']):\n        raise HTTPException(status_code=401, detail=\"Invalid email or password\")\n    \n    # Generate token\n    token = create_access_token({\"sub\": user['id']})\n    \n    user_response = UserResponse(\n        id=user['id'],\n        email=user['email'],\n        full_name=user['full_name'],\n        created_at=datetime.fromisoformat(user['created_at'])\n    )\n    \n    return LoginResponse(token=token, user=user_response)
