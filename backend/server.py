@@ -85,18 +85,77 @@ async def signup(user_data: UserCreate):
     
     return LoginResponse(token=token, user=user_response)
 
-@api_router.post(\"/auth/login\", response_model=LoginResponse)
-async def login(login_data: LoginRequest):\n    # Find user\n    user = await db.users.find_one({\"email\": login_data.email}, {\"_id\": 0})\n    if not user:\n        raise HTTPException(status_code=401, detail=\"Invalid email or password\")\n    \n    # Verify password\n    if not verify_password(login_data.password, user['password_hash']):\n        raise HTTPException(status_code=401, detail=\"Invalid email or password\")\n    \n    # Generate token\n    token = create_access_token({\"sub\": user['id']})\n    \n    user_response = UserResponse(\n        id=user['id'],\n        email=user['email'],\n        full_name=user['full_name'],\n        created_at=datetime.fromisoformat(user['created_at'])\n    )\n    \n    return LoginResponse(token=token, user=user_response)
+@api_router.post("/auth/login", response_model=LoginResponse)
+async def login(login_data: LoginRequest):
+    # Find user
+    user = await db.users.find_one({"email": login_data.email}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Verify password
+    if not verify_password(login_data.password, user['password_hash']):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Generate token
+    token = create_access_token({"sub": user['id']})
+    
+    user_response = UserResponse(
+        id=user['id'],
+        email=user['email'],
+        full_name=user['full_name'],
+        created_at=datetime.fromisoformat(user['created_at'])
+    )
+    
+    return LoginResponse(token=token, user=user_response)
 
-@api_router.get(\"/auth/me\", response_model=UserResponse)
-async def get_me(current_user: dict = Depends(get_current_user)):\n    return UserResponse(\n        id=current_user['id'],\n        email=current_user['email'],\n        full_name=current_user['full_name'],\n        created_at=datetime.fromisoformat(current_user['created_at'])\n    )
+@api_router.get("/auth/me", response_model=UserResponse)
+async def get_me(current_user: dict = Depends(get_current_user)):
+    return UserResponse(
+        id=current_user['id'],
+        email=current_user['email'],
+        full_name=current_user['full_name'],
+        created_at=datetime.fromisoformat(current_user['created_at'])
+    )
 
 # Resume Routes
-@api_router.post(\"/resumes\", response_model=ResumeResponse)
-async def create_resume(resume_data: ResumeCreate, current_user: dict = Depends(get_current_user)):\n    resume_id = str(uuid.uuid4())\n    \n    # Calculate ATS score\n    resume_dict = resume_data.model_dump()\n    ats_result = calculate_ats_score(resume_dict)\n    \n    resume_doc = {\n        \"id\": resume_id,\n        \"user_id\": current_user['id'],\n        **resume_dict,\n        \"ats_score\": ats_result['score'],\n        \"created_at\": datetime.now(timezone.utc).isoformat(),\n        \"updated_at\": datetime.now(timezone.utc).isoformat()\n    }\n    \n    await db.resumes.insert_one(resume_doc)\n    \n    return ResumeResponse(\n        id=resume_id,\n        user_id=current_user['id'],\n        **resume_dict,\n        ats_score=ats_result['score'],\n        created_at=datetime.now(timezone.utc),\n        updated_at=datetime.now(timezone.utc)\n    )
+@api_router.post("/resumes", response_model=ResumeResponse)
+async def create_resume(resume_data: ResumeCreate, current_user: dict = Depends(get_current_user)):
+    resume_id = str(uuid.uuid4())
+    
+    # Calculate ATS score
+    resume_dict = resume_data.model_dump()
+    ats_result = calculate_ats_score(resume_dict)
+    
+    resume_doc = {
+        "id": resume_id,
+        "user_id": current_user['id'],
+        **resume_dict,
+        "ats_score": ats_result['score'],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.resumes.insert_one(resume_doc)
+    
+    return ResumeResponse(
+        id=resume_id,
+        user_id=current_user['id'],
+        **resume_dict,
+        ats_score=ats_result['score'],
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
+    )
 
-@api_router.get(\"/resumes\", response_model=List[ResumeResponse])
-async def get_resumes(current_user: dict = Depends(get_current_user)):\n    resumes = await db.resumes.find({\"user_id\": current_user['id']}, {\"_id\": 0}).to_list(1000)\n    \n    # Convert ISO strings to datetime\n    for resume in resumes:\n        resume['created_at'] = datetime.fromisoformat(resume['created_at'])\n        resume['updated_at'] = datetime.fromisoformat(resume['updated_at'])\n    \n    return resumes
+@api_router.get("/resumes", response_model=List[ResumeResponse])
+async def get_resumes(current_user: dict = Depends(get_current_user)):
+    resumes = await db.resumes.find({"user_id": current_user['id']}, {"_id": 0}).to_list(1000)
+    
+    # Convert ISO strings to datetime
+    for resume in resumes:
+        resume['created_at'] = datetime.fromisoformat(resume['created_at'])
+        resume['updated_at'] = datetime.fromisoformat(resume['updated_at'])
+    
+    return resumes
 
 @api_router.get(\"/resumes/{resume_id}\", response_model=ResumeResponse)
 async def get_resume(resume_id: str, current_user: dict = Depends(get_current_user)):\n    resume = await db.resumes.find_one({\"id\": resume_id, \"user_id\": current_user['id']}, {\"_id\": 0})\n    \n    if not resume:\n        raise HTTPException(status_code=404, detail=\"Resume not found\")\n    \n    resume['created_at'] = datetime.fromisoformat(resume['created_at'])\n    resume['updated_at'] = datetime.fromisoformat(resume['updated_at'])\n    \n    return resume
