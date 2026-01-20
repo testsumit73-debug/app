@@ -3,6 +3,7 @@ import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 
 const ResumeForm = ({ resumeData, setResumeData, templates }) => {
   const [activeSection, setActiveSection] = useState('personal');
+  const [skillsInput, setSkillsInput] = useState('');
 
   const updateField = (section, field, value) => {
     setResumeData({
