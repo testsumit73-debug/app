@@ -452,3 +452,25 @@ agent_communication:
       🎉 ALL BACKEND FUNCTIONALITY VERIFIED AND WORKING
       
       Ready for frontend testing next. Backend is solid foundation.
+  - agent: "main"
+    message: |
+      🐛 BUG FIX: Skills Input Concatenation Issue
+      
+      Issue Reported: Skills were concatenating instead of being properly separated
+      Root Cause: React state update timing problem - real-time split on every keystroke 
+      conflicted with React's asynchronous state updates
+      
+      Fix Implemented:
+      - Added local state buffer (skillsInput) for textarea
+      - Changed to blur/enter-triggered split instead of real-time
+      - Updated user instructions: "Press Enter or click outside to save"
+      - File modified: /app/frontend/src/components/ResumeForm.js
+      
+      Skills now properly separated when user:
+      1. Presses Enter key
+      2. Clicks outside the textarea (blur event)
+      
+      ✅ Frontend recompiled successfully
+      ✅ All services running
+      
+      Ready for user testing of skills input functionality.
