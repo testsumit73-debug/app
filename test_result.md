@@ -347,6 +347,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "Multi-step form for creating resume. Needs testing."
+      - working: "NA"
+        agent: "main"
+        comment: "Fixed skills input concatenation issue. Changed from real-time split to blur/enter-triggered split using local state buffer. Skills now properly separated when user presses Enter or clicks outside textarea."
   
   - task: "Resume Builder - Edit"
     implemented: true
