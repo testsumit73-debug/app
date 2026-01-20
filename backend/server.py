@@ -169,8 +169,35 @@ async def get_resume(resume_id: str, current_user: dict = Depends(get_current_us
     
     return resume
 
-@api_router.put(\"/resumes/{resume_id}\", response_model=ResumeResponse)
-async def update_resume(resume_id: str, resume_data: ResumeUpdate, current_user: dict = Depends(get_current_user)):\n    # Check if resume exists\n    existing_resume = await db.resumes.find_one({\"id\": resume_id, \"user_id\": current_user['id']}, {\"_id\": 0})\n    if not existing_resume:\n        raise HTTPException(status_code=404, detail=\"Resume not found\")\n    \n    # Update only provided fields\n    update_data = resume_data.model_dump(exclude_unset=True)\n    \n    if update_data:\n        # Recalculate ATS score\n        merged_data = {**existing_resume, **update_data}\n        ats_result = calculate_ats_score(merged_data)\n        \n        update_data['ats_score'] = ats_result['score']\n        update_data['updated_at'] = datetime.now(timezone.utc).isoformat()\n        \n        await db.resumes.update_one(\n            {\"id\": resume_id, \"user_id\": current_user['id']},\n            {\"$set\": update_data}\n        )\n    \n    # Fetch updated resume\n    updated_resume = await db.resumes.find_one({\"id\": resume_id, \"user_id\": current_user['id']}, {\"_id\": 0})\n    updated_resume['created_at'] = datetime.fromisoformat(updated_resume['created_at'])\n    updated_resume['updated_at'] = datetime.fromisoformat(updated_resume['updated_at'])\n    \n    return updated_resume
+@api_router.put("/resumes/{resume_id}", response_model=ResumeResponse)
+async def update_resume(resume_id: str, resume_data: ResumeUpdate, current_user: dict = Depends(get_current_user)):
+    # Check if resume exists
+    existing_resume = await db.resumes.find_one({"id": resume_id, "user_id": current_user['id']}, {"_id": 0})
+    if not existing_resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    # Update only provided fields
+    update_data = resume_data.model_dump(exclude_unset=True)
+    
+    if update_data:
+        # Recalculate ATS score
+        merged_data = {**existing_resume, **update_data}
+        ats_result = calculate_ats_score(merged_data)
+        
+        update_data['ats_score'] = ats_result['score']
+        update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+        
+        await db.resumes.update_one(
+            {"id": resume_id, "user_id": current_user['id']},
+            {"$set": update_data}
+        )
+    
+    # Fetch updated resume
+    updated_resume = await db.resumes.find_one({"id": resume_id, "user_id": current_user['id']}, {"_id": 0})
+    updated_resume['created_at'] = datetime.fromisoformat(updated_resume['created_at'])
+    updated_resume['updated_at'] = datetime.fromisoformat(updated_resume['updated_at'])
+    
+    return updated_resume
 
 @api_router.delete(\"/resumes/{resume_id}\")
 async def delete_resume(resume_id: str, current_user: dict = Depends(get_current_user)):\n    result = await db.resumes.delete_one({\"id\": resume_id, \"user_id\": current_user['id']})\n    \n    if result.deleted_count == 0:\n        raise HTTPException(status_code=404, detail=\"Resume not found\")\n    \n    return {\"message\": \"Resume deleted successfully\"}
