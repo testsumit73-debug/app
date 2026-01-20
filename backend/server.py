@@ -34,7 +34,24 @@ api_router = APIRouter(prefix="/api")
 
 # Auth dependency
 async def get_current_user(authorization: Optional[str] = Header(None)) -> dict:
-    if not authorization or not authorization.startswith('Bearer '):\n        raise HTTPException(status_code=401, detail=\"Missing or invalid authorization header\")\n    \n    token = authorization.replace('Bearer ', '')\n    payload = decode_token(token)\n    \n    if not payload:\n        raise HTTPException(status_code=401, detail=\"Invalid or expired token\")\n    \n    user_id = payload.get('sub')\n    if not user_id:\n        raise HTTPException(status_code=401, detail=\"Invalid token payload\")\n    \n    user = await db.users.find_one({\"id\": user_id}, {\"_id\": 0})\n    if not user:\n        raise HTTPException(status_code=401, detail=\"User not found\")\n    \n    return user
+    if not authorization or not authorization.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+    
+    token = authorization.replace('Bearer ', '')
+    payload = decode_token(token)
+    
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    user_id = payload.get('sub')
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    return user
 
 # Auth Routes
 @api_router.post(\"/auth/signup\", response_model=LoginResponse)
