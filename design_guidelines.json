@@ -1,0 +1,124 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "CareerForge",
+      "archetype": "The Architect",
+      "core_values": ["Precision", "Clarity", "Empowerment"],
+      "vibe": "Swiss Design meets Modern SaaS. Structured, high-contrast, and distraction-free."
+    },
+    "typography": {
+      "fonts": {
+        "primary": "Manrope",
+        "secondary": "Libre Baskerville",
+        "mono": "JetBrains Mono"
+      },
+      "usage": {
+        "headings": "font-primary font-bold tracking-tight text-slate-900",
+        "body": "font-primary text-slate-600 leading-relaxed",
+        "resume_preview": "font-secondary text-slate-800",
+        "code": "font-mono text-xs"
+      },
+      "scale": {
+        "h1": "text-5xl md:text-7xl font-extrabold tracking-tighter",
+        "h2": "text-3xl md:text-5xl font-bold tracking-tight",
+        "h3": "text-2xl font-semibold",
+        "body": "text-base md:text-lg"
+      }
+    },
+    "colors": {
+      "palette": {
+        "primary": "#0F172A",
+        "primary_foreground": "#F8FAFC",
+        "secondary": "#F1F5F9",
+        "secondary_foreground": "#0F172A",
+        "accent": "#2563EB",
+        "accent_foreground": "#FFFFFF",
+        "success": "#059669",
+        "warning": "#D97706",
+        "error": "#DC2626",
+        "background": "#FFFFFF",
+        "surface": "#F8FAFC",
+        "border": "#E2E8F0"
+      },
+      "gradients": {
+        "hero": "bg-gradient-to-br from-slate-50 to-slate-100",
+        "accent": "bg-gradient-to-r from-blue-600 to-indigo-600"
+      }
+    },
+    "spacing": {
+      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+      "section": "py-20 md:py-32",
+      "element": "space-y-6"
+    },
+    "layout": {
+      "grid_system": "grid grid-cols-1 md:grid-cols-12 gap-8",
+      "bento_grid": "grid grid-cols-1 md:grid-cols-3 gap-6",
+      "builder_layout": "flex h-screen overflow-hidden"
+    },
+    "components": {
+      "buttons": {
+        "primary": "bg-slate-900 text-white hover:bg-slate-800 rounded-md px-8 py-3 font-medium transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5",
+        "secondary": "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-md px-8 py-3 font-medium transition-all",
+        "ghost": "text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md px-4 py-2 transition-all"
+      },
+      "cards": {
+        "base": "bg-white border border-slate-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all",
+        "feature": "bg-slate-50 border border-slate-100 rounded-2xl p-8 hover:bg-white hover:border-slate-200 transition-all duration-300 group"
+      },
+      "inputs": {
+        "base": "w-full bg-white border border-slate-200 rounded-md px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
+      }
+    },
+    "motion": {
+      "transitions": "transition-all duration-300 ease-out",
+      "hover": "hover:-translate-y-1 hover:shadow-lg",
+      "entrance": "animate-in fade-in slide-in-from-bottom-4 duration-700"
+    }
+  },
+  "assets": {
+    "images": {
+      "hero_bg": "https://images.pexels.com/photos/5668858/pexels-photo-5668858.jpeg",
+      "feature_1": "https://images.pexels.com/photos/7793999/pexels-photo-7793999.jpeg",
+      "feature_2": "https://images.pexels.com/photos/8528405/pexels-photo-8528405.jpeg",
+      "testimonial_avatar": "https://images.pexels.com/photos/5668869/pexels-photo-5668869.jpeg"
+    },
+    "icons": "lucide-react"
+  },
+  "pages": {
+    "landing": {
+      "sections": ["Hero", "Features", "Templates", "Testimonials", "CTA"],
+      "layout": "Single column with alternating bento grids for features"
+    },
+    "dashboard": {
+      "layout": "Sidebar navigation + Main content area (Grid of resumes)",
+      "features": ["Create New", "Resume List", "Profile Settings"]
+    },
+    "builder": {
+      "layout": "Split Screen: Left Panel (Forms/Editor) - 40%, Right Panel (Live Preview) - 60%",
+      "features": ["Real-time updates", "Drag and drop sections", "PDF Export"]
+    }
+  },
+  "instructions_to_main_agent": [
+    "INSTALL 'lucide-react' and 'framer-motion' immediately.",
+    "Since shadcn/ui components are missing, CREATE reusable components in /app/frontend/src/components/ui/ for: Button, Input, Card, Label, Dialog (Modal).",
+    "Use the 'Manrope' font from Google Fonts. Add it to index.html or import in CSS.",
+    "Ensure the Resume Builder page uses a SPLIT LAYOUT. The preview must be sticky on the right side.",
+    "For the Resume Preview, use a print-friendly CSS media query (@media print).",
+    "Do NOT use gradients for text. Keep it legible and professional.",
+    "Use 'sonner' for notifications (e.g., 'Resume Saved').",
+    "Implement the 'Tracing Beam' effect on the Template Selection cards."
+  ],
+  "universal_guidelines": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary."
+  ]
+}
