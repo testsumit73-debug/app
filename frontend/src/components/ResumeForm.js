@@ -145,16 +145,25 @@ const ResumeForm = ({ resumeData, setResumeData, templates }) => {
       {activeSection === 'skills' && (
         <div className="bg-white rounded-lg border border-slate-200 p-6 space-y-4" data-testid="skills-section">
           <h3 className="text-lg font-semibold text-slate-900 font-primary">Skills</h3>
-          <p className="text-sm text-slate-600">Add skills separated by commas</p>
+          <p className="text-sm text-slate-600">Add skills separated by commas. Press Enter or click outside to save.</p>
           <textarea
             placeholder="e.g., JavaScript, React, Node.js, Python, SQL"
-            value={resumeData.skills.join(', ')}
-            onChange={(e) =>
-              setResumeData({
-                ...resumeData,
-                skills: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
-              })
-            }
+            value={skillsInput || resumeData.skills.join(', ')}
+            onChange={(e) => setSkillsInput(e.target.value)}
+            onBlur={(e) => {
+              const skills = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
+              setResumeData({ ...resumeData, skills });
+              setSkillsInput('');
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const skills = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
+                setResumeData({ ...resumeData, skills });
+                setSkillsInput('');
+                e.target.blur();
+              }
+            }}
             rows={4}
             className="w-full px-4 py-3 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
             data-testid="input-skills"
