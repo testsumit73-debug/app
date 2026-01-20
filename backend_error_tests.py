@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 class ResumeBuilderErrorTester:
-    def __init__(self, base_url="https://resumecraft-56.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://bugblaster-5.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
